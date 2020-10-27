@@ -1,16 +1,21 @@
 """
 This file holds the SlowWire communication protocol class
 """
-
+#!/usr/bin/env python
+# only python3 compatible
 
 from builtins import hex
 from builtins import range
 from builtins import object
-import time 
+import time  
 import sys
 import logging
 
 logger = logging.getLogger("hydrosys4."+__name__)
+
+from time import perf_counter
+default_timer = time.perf_counter
+    
 
 
 import RPi.GPIO as GPIO
@@ -53,7 +58,7 @@ class SlowWire(object):
 
 		cyclewait=0.001
 		numcycles=int(self._t_wait_sensor/cyclewait)
-		print ("numero di cicli --------------------------->", numcycles)
+		#print ("numero di cicli --------------------------->", numcycles)
 
 		# Wait for sensor to pull pin low.
 		count = 0
@@ -61,7 +66,7 @@ class SlowWire(object):
 			count=count+1
 			time.sleep(cyclewait)
 
-		print ("Conta --------------------------->", count)
+		#print ("Conta --------------------------->", count)
 		if (count >= numcycles):
 			# Timeout waiting for response.
 			print ("error reading the SlowWire sensor: Wait too long for sensor answer")
@@ -97,10 +102,10 @@ class SlowWire(object):
 			if (not exitcondition)and(thispulsecount):
 				HighpulseCounts.append(thispulsecount)		
 
-		print ("High pulse count ------------------------------------>", HighpulseCounts)
+		#print ("High pulse count ------------------------------------>", HighpulseCounts)
 		#check data consistency:
 		if len(HighpulseCounts)>7:
-			print ("lenghts High=%d Low=%d ", len(HighpulseCounts),len(LowpulseCounts))
+			#print ("lenghts High=%d Low=%d ", len(HighpulseCounts),len(LowpulseCounts))
 			if not ((len(HighpulseCounts)+1)==len(LowpulseCounts)):
 				#data mismatch
 				print ("error reading the SlowWire sensor: Data mismatch ")
@@ -120,7 +125,7 @@ class SlowWire(object):
 
 		threshold /= len(LowpulseCounts)-1
 		threshold /=2
-		print("Slow Wire Threshold: -------------------------------------------- ", threshold)
+		#print("Slow Wire Threshold: -------------------------------------------- ", threshold)
 		#Interpret each high pulse as a 0 or 1 by comparing it to the average size of the low pulses.
 
 		data=[]
@@ -137,7 +142,7 @@ class SlowWire(object):
 				databyte=0
   
 
-		print("Slow Wire Data: -------------------------------------------- ", data)
+		#print("Slow Wire Data: -------------------------------------------- ", data)
 		for item in data:
 			print("The hexadecimal data" , hex(item)) 
 
@@ -207,11 +212,28 @@ if __name__ == '__main__':
 	"""
 	This is an usage example, connected to GPIO PIN 17 (BCM)
 	"""
-	PINDATA=20
+	
+	#print ('Number of arguments:', len(sys.argv), 'arguments.')
+	#print ('Argument List:', str(sys.argv))
+	
+	if len(sys.argv)<2:
+		print (' Please enter the GPIO PIN as argument')
+		print (' Example: python3 SlowWire.py 18')
+		sys.exit()
+		
+	try: 
+		PINDATA=int(sys.argv[1])
+	except:
+		print (' PIN number is not a valid integer')
+		sys.exit()
+			
+	
+	
+	#PINDATA=18
 	GPIO.setmode(GPIO.BCM)
 	Sensor_bus = SlowWire(dout_pin=PINDATA)
 	
-	#print "Starting sample reading"
+
 	ReadingAttempt=3
 	isok=False
 	while (ReadingAttempt>0)and(not isok):
@@ -223,3 +245,4 @@ if __name__ == '__main__':
 		else:
 			print ("error")
 		ReadingAttempt=ReadingAttempt-1
+
